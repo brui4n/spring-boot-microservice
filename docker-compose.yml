@@ -1,0 +1,80 @@
+version: '3.8'
+services:
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-product:3306/microservicio_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=sonlol54
+    depends_on:
+      - db-product
+    networks:
+      - app-network
+
+  category-service:
+    build: ./category-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-category:3306/category_db
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=sonlol54
+    depends_on:
+      - db-category
+    networks:
+      - app-network
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8084:8080"
+    depends_on:
+      - product-service
+      - category-service
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api-gateway
+    networks:
+      - app-network
+
+  db-product:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=sonlol54
+      - MYSQL_DATABASE=microservicio_db
+    ports:
+      - "3309:3306"
+    volumes:
+      - db-product-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  db-category:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=sonlol54
+      - MYSQL_DATABASE=category_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - db-category-data:/var/lib/mysql
+    networks:
+      - app-network
+
+volumes:
+  db-product-data:
+  db-category-data:
+
+networks:
+  app-network:
+    driver: bridge
